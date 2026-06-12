@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
+import { FriendsModule } from './modules/friends/friends.module';
+import { ChatModule } from './modules/chat/chat.module';
 import { User } from './entities/user.entity';
 import { UserLocation } from './entities/user-location.entity';
 import { Friendship } from './entities/friendship.entity';
@@ -25,6 +27,8 @@ import { Conversation, Message } from './entities/message.entity';
     AuthModule,
     UsersModule,
     DiscoveryModule,
+    FriendsModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

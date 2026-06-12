@@ -13,6 +13,8 @@ const config_1 = require("@nestjs/config");
 const auth_module_1 = require("./modules/auth/auth.module");
 const users_module_1 = require("./modules/users/users.module");
 const discovery_module_1 = require("./modules/discovery/discovery.module");
+const friends_module_1 = require("./modules/friends/friends.module");
+const chat_module_1 = require("./modules/chat/chat.module");
 const user_entity_1 = require("./entities/user.entity");
 const user_location_entity_1 = require("./entities/user-location.entity");
 const friendship_entity_1 = require("./entities/friendship.entity");
@@ -37,6 +39,8 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             discovery_module_1.DiscoveryModule,
+            friends_module_1.FriendsModule,
+            chat_module_1.ChatModule,
         ],
     })
 ], AppModule);

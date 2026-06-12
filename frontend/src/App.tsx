@@ -4,15 +4,12 @@ import { AuthBootstrap, ProtectedRoute, GuestRoute } from './components/AuthGuar
 import { LoginPage, RegisterPage } from './pages/AuthPages';
 import { ProfilePage } from './pages/ProfilePage';
 import { DiscoverPage } from './pages/DiscoverPage';
+import { FriendsPage } from './pages/FriendsPage';
 
 const queryClient = new QueryClient();
 
 const ComingSoon = ({ name }: { name: string }) => (
-  <div style={{
-    minHeight: '100vh', display: 'flex', alignItems: 'center',
-    justifyContent: 'center', background: '#0f0f10',
-    color: '#a1a1aa', fontFamily: 'Inter, sans-serif', fontSize: 18,
-  }}>
+  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f10', color: '#a1a1aa', fontFamily: 'Inter, sans-serif', fontSize: 18 }}>
     {name} — coming soon
   </div>
 );
@@ -30,7 +27,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/discover" element={<DiscoverPage />} />
-              <Route path="/friends" element={<ComingSoon name="Friends" />} />
+              <Route path="/friends" element={<FriendsPage />} />
               <Route path="/chat" element={<ComingSoon name="Chat" />} />
             </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />

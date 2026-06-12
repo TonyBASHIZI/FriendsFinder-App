@@ -9,7 +9,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const platform_express_1 = require("@nestjs/platform-express");
 const users_controller_1 = require("./users.controller");
+const upload_controller_1 = require("./upload.controller");
 const users_service_1 = require("./users.service");
 const user_entity_1 = require("../../entities/user.entity");
 const user_location_entity_1 = require("../../entities/user-location.entity");
@@ -18,8 +20,11 @@ let UsersModule = class UsersModule {
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, user_location_entity_1.UserLocation])],
-        controllers: [users_controller_1.UsersController],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, user_location_entity_1.UserLocation]),
+            platform_express_1.MulterModule.register({ dest: './src/uploads' }),
+        ],
+        controllers: [users_controller_1.UsersController, upload_controller_1.UploadController],
         providers: [users_service_1.UsersService],
         exports: [users_service_1.UsersService],
     })
