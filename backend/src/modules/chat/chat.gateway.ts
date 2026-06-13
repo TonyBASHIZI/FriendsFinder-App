@@ -1,6 +1,7 @@
 import {
   WebSocketGateway, WebSocketServer,
-  SubscribeMessage, MessageBody, ConnectedSocket, OnGatewayConnection, OnGatewayDisconnect,
+  SubscribeMessage, MessageBody, ConnectedSocket,
+  OnGatewayConnection, OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
@@ -13,8 +14,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  // Map userId -> socketId
-  private onlineUsers = new Map<string, string>();
+  private onlineUsers = new Map<string, string>(); // userId -> socketId
 
   constructor(
     private readonly chatService: ChatService,
@@ -27,7 +27,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const payload = this.jwtService.verify(token);
       client.data.userId = payload.sub;
       this.onlineUsers.set(payload.sub, client.id);
+
+      // Tell everyone this user is online
       this.server.emit('user_online', { userId: payload.sub });
+
+      // Send the new user the full list of who's currently online
+      const onlineList = Array.from(this.onlineUsers.keys());
+      client.emit('online_users', onlineList);
+
     } catch {
       client.disconnect();
     }
@@ -42,25 +49,41 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join_conversation')
-  async joinConversation(@ConnectedSocket() client: Socket, @MessageBody() data: { conversationId: string }) {
+  async joinConversation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { conversationId: string },
+  ) {
     client.join(data.conversationId);
     const messages = await this.chatService.getMessages(data.conversationId, client.data.userId);
     client.emit('messages_history', messages);
   }
 
   @SubscribeMessage('send_message')
-  async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() data: { conversationId: string; content: string }) {
+  async handleMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { conversationId: string; content: string },
+  ) {
     const message = await this.chatService.saveMessage(data.conversationId, client.data.userId, data.content);
     this.server.to(data.conversationId).emit('new_message', message);
   }
 
   @SubscribeMessage('start_conversation')
-  async startConversation(@ConnectedSocket() client: Socket, @MessageBody() data: { friendId: string }) {
+  async startConversation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { friendId: string },
+  ) {
     const convo = await this.chatService.getOrCreateConversation(client.data.userId, data.friendId);
     client.emit('conversation_started', convo);
   }
 
-  isOnline(userId: string) {
-    return this.onlineUsers.has(userId);
+  @SubscribeMessage('typing')
+  handleTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { conversationId: string },
+  ) {
+    client.to(data.conversationId).emit('friend_typing', {
+      userId: client.data.userId,
+      conversationId: data.conversationId,
+    });
   }
 }

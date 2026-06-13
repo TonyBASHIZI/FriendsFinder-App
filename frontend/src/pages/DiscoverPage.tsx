@@ -214,7 +214,10 @@ export function DiscoverPage() {
               {nearby.map((u) => (
                 <div key={u.id} onClick={() => setSelected(u.id === selected ? null : u.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 10, marginBottom: 4, cursor: 'pointer', background: selected === u.id ? '#1e1b4b' : 'transparent', border: selected === u.id ? '1px solid #4f46e5' : '1px solid transparent', transition: 'all 0.15s' }}>
-                  <Avatar url={u.avatarUrl} name={u.displayName || u.username} />
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <Avatar url={u.avatarUrl} name={u.displayName || u.username} />
+                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: '#52525b', border: '2px solid #0f0f10' }} />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: '#fafafa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.displayName || u.username}</div>
                     <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>📍 {u.distanceKm} km away</div>

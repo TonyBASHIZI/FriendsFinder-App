@@ -33,6 +33,8 @@ let ChatGateway = class ChatGateway {
             client.data.userId = payload.sub;
             this.onlineUsers.set(payload.sub, client.id);
             this.server.emit('user_online', { userId: payload.sub });
+            const onlineList = Array.from(this.onlineUsers.keys());
+            client.emit('online_users', onlineList);
         }
         catch {
             client.disconnect();
@@ -58,8 +60,11 @@ let ChatGateway = class ChatGateway {
         const convo = await this.chatService.getOrCreateConversation(client.data.userId, data.friendId);
         client.emit('conversation_started', convo);
     }
-    isOnline(userId) {
-        return this.onlineUsers.has(userId);
+    handleTyping(client, data) {
+        client.to(data.conversationId).emit('friend_typing', {
+            userId: client.data.userId,
+            conversationId: data.conversationId,
+        });
     }
 };
 exports.ChatGateway = ChatGateway;
@@ -91,6 +96,14 @@ __decorate([
     __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "startConversation", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('typing'),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:returntype", void 0)
+], ChatGateway.prototype, "handleTyping", null);
 exports.ChatGateway = ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: { origin: /^http:\/\/localhost:\d+$/, credentials: true },
