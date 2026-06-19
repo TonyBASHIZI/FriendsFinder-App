@@ -66,6 +66,7 @@ function groupMessagesByDate(messages: Message[]) {
   return groups;
 }
 
+<<<<<<< HEAD
 function isImageUrl(content: string) {
   return content.startsWith('http://localhost:3000/uploads/');
 }
@@ -74,25 +75,45 @@ export function ChatPage() {
   const navigate = useNavigate();
   const { user, token } = useAuthStore();
   const { onlineUsers } = useSocketStore();
+=======
+export function ChatPage() {
+  const navigate = useNavigate();
+  const { user, token } = useAuthStore();
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [socket, setSocket] = useState<Socket | null>(null);
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
   const [isTyping, setIsTyping] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [notifPermission, setNotifPermission] = useState(
     'Notification' in window ? Notification.permission : 'denied'
   );
+=======
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const [isTyping, setIsTyping] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeout = useRef<any>(null);
   const activeConvoRef = useRef<Conversation | null>(null);
+<<<<<<< HEAD
   const conversationsRef = useRef<Conversation[]>([]);
 
   useEffect(() => { activeConvoRef.current = activeConvo; }, [activeConvo]);
   useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
+=======
+
+  useEffect(() => {
+    activeConvoRef.current = activeConvo;
+  }, [activeConvo]);
+
+  
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
 
   useEffect(() => {
     const s = io('http://localhost:3000', {
@@ -100,6 +121,7 @@ export function ChatPage() {
       transports: ['websocket'],
     });
 
+<<<<<<< HEAD
     s.on('connect', () => console.log('Chat socket connected'));
 
     s.on('new_message', (msg: Message) => {
@@ -152,13 +174,73 @@ export function ChatPage() {
         } catch {}
       }
     });
+=======
+    s.on('connect', () => {
+      console.log('Socket connected:', s.id);
+    });
+
+    s.on('user_online', ({ userId }: { userId: string }) => {
+      setOnlineUsers((prev) => new Set([...prev, userId]));
+    });
+
+    s.on('user_offline', ({ userId }: { userId: string }) => {
+      setOnlineUsers((prev) => {
+        const n = new Set(prev);
+        n.delete(userId);
+        return n;
+      });
+    s.on('online_users', (userIds: string[]) => {
+      setOnlineUsers(new Set(userIds));
+    });
+
+    });
+
+    s.on('new_message', (msg: Message) => {
+  setMessages((prev) => [...prev, msg]);
+  scrollToBottom();
+  setConversations((prev) => prev.map((c) =>
+    c.id === msg.conversationId
+      ? { ...c, lastMessage: msg.content, lastMessageAt: msg.createdAt, unreadCount: activeConvoRef.current?.id === msg.conversationId ? 0 : c.unreadCount + 1 }
+      : c
+  ));
+
+  // Browser notification if message is from someone else and tab is not focused
+  if (msg.senderId !== user?.id && document.hidden) {
+    const convo = activeConvoRef.current;
+    const name = convo?.displayName || convo?.username || 'Someone';
+    const body = msg.content.startsWith('http://localhost:3000/uploads/') ? '📷 Sent a photo' : msg.content;
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(name + ' sent you a message', {
+        body,
+        icon: convo?.avatarUrl ? 'http://localhost:3000' + convo.avatarUrl : undefined,
+      });
+    }
+    // Also update tab title
+    document.title = '💬 New message!';
+    setTimeout(() => { document.title = 'FriendFinder'; }, 3000);
+  }
+});
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
 
     s.on('messages_history', (msgs: Message[]) => {
       setMessages(msgs);
       scrollToBottom();
     });
 
+<<<<<<< HEAD
     s.on('conversation_started', () => { fetchConversations(); });
+
+    s.on('friend_typing', ({ userId, conversationId }: { userId: string; conversationId: string }) => {
+      if (userId !== user?.id && conversationId === activeConvoRef.current?.id) {
+        setIsTyping(true);
+        clearTimeout(typingTimeout.current);
+        typingTimeout.current = setTimeout(() => setIsTyping(false), 2000);
+      }
+=======
+    s.on('conversation_started', () => {
+      fetchConversations();
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
+    });
 
     s.on('friend_typing', ({ userId, conversationId }: { userId: string; conversationId: string }) => {
       if (userId !== user?.id && conversationId === activeConvoRef.current?.id) {
@@ -200,12 +282,18 @@ export function ChatPage() {
     setIsTyping(false);
     setShowEmoji(false);
     socket?.emit('join_conversation', { conversationId: convo.id });
+<<<<<<< HEAD
     setConversations((prev) => {
       const updated = prev.map((c) => c.id === convo.id ? { ...c, unreadCount: 0 } : c);
       const total = updated.reduce((sum, c) => sum + c.unreadCount, 0);
       useSocketStore.getState().setTotalUnread(total);
       return updated;
     });
+=======
+    setConversations((prev) => prev.map((c) =>
+      c.id === convo.id ? { ...c, unreadCount: 0 } : c
+    ));
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
   }
 
   function sendMessage() {
@@ -228,7 +316,11 @@ export function ChatPage() {
     setInput((prev) => prev + emojiData.emoji);
   }
 
+<<<<<<< HEAD
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+=======
+ async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
     const file = e.target.files?.[0];
     if (!file || !activeConvo) return;
     try {
@@ -242,6 +334,12 @@ export function ChatPage() {
     } catch {
       console.error('Failed to upload image');
     }
+<<<<<<< HEAD
+=======
+  }
+  function isImageUrl(content: string) {
+    return content.startsWith('http://localhost:3000/uploads/');
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
   }
 
   const grouped = groupMessagesByDate(messages);
@@ -292,6 +390,7 @@ export function ChatPage() {
                   <div style={{ position: 'relative' }}>
                     <Avatar url={c.avatarUrl} name={c.displayName || c.username} size={42} />
                     <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: onlineUsers.has(c.friendId) ? '#22c55e' : '#52525b', border: '2px solid #18181b', transition: 'background 0.3s' }} />
+<<<<<<< HEAD
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -316,6 +415,28 @@ export function ChatPage() {
                       )}
                     </div>
                   </div>
+=======
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                    <span style={{ fontSize: 12, color: '#71717a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {c.lastMessage
+                        ? c.lastMessage.startsWith('http://localhost:3000/uploads/')
+                          ? '📷 Photo'
+                          : c.lastMessage.length > 35
+                            ? c.lastMessage.substring(0, 35) + '...'
+                            : c.lastMessage
+                        : 'Start a conversation'}
+                    </span>
+                    {onlineUsers.has(c.friendId) && (
+                      <span style={{ fontSize: 11, color: '#22c55e', marginTop: 1 }}>● Online</span>
+                    )}
+                  </div>
+                  {c.unreadCount > 0 && (
+                    <span style={{ background: '#6366f1', color: 'white', fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 99, flexShrink: 0, marginLeft: 4 }}>{c.unreadCount}</span>
+                  )}
+                </div>
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
                 </div>
               ))
             )}
@@ -364,11 +485,19 @@ export function ChatPage() {
                         <span style={{ fontSize: 11, color: '#52525b', background: '#111113', padding: '2px 10px', borderRadius: 99, border: '1px solid #27272a' }}>{group.date}</span>
                         <div style={{ flex: 1, height: 1, background: '#27272a' }} />
                       </div>
+<<<<<<< HEAD
+=======
+
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
                       {group.messages.map((msg, i) => {
                         const isMe = msg.senderId === user?.id;
                         const prevMsg = group.messages[i - 1];
                         const isSameAuthor = prevMsg && prevMsg.senderId === msg.senderId;
                         const isImage = isImageUrl(msg.content);
+<<<<<<< HEAD
+=======
+
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
                         return (
                           <div key={msg.id} style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', marginTop: isSameAuthor ? 2 : 8 }}>
                             {!isMe && (
@@ -389,8 +518,16 @@ export function ChatPage() {
                                     ? isSameAuthor ? '16px 4px 4px 16px' : '16px 16px 4px 16px'
                                     : isSameAuthor ? '4px 16px 16px 4px' : '16px 16px 16px 4px',
                                   background: isMe ? '#6366f1' : '#2a2a2e',
+<<<<<<< HEAD
                                   color: '#fafafa', fontSize: 14, lineHeight: 1.5,
                                   wordBreak: 'break-word', boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+=======
+                                  color: '#fafafa',
+                                  fontSize: 14,
+                                  lineHeight: 1.5,
+                                  wordBreak: 'break-word',
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
                                 }}>
                                   {msg.content}
                                 </div>
@@ -406,6 +543,10 @@ export function ChatPage() {
                     </div>
                   ))
                 )}
+<<<<<<< HEAD
+=======
+
+>>>>>>> d28018372714d0cd56284fb6e24cb106828fc772
                 {isTyping && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <Avatar url={activeConvo.avatarUrl} name={activeConvo.displayName} size={24} />
