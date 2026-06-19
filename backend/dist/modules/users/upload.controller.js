@@ -29,7 +29,6 @@ let UploadController = class UploadController {
             throw new common_1.BadRequestException('No file uploaded');
         const avatarUrl = '/uploads/' + file.filename;
         await this.usersService.updateProfile(req.user.id, { avatarUrl });
-        return { avatarUrl };
     }
 };
 exports.UploadController = UploadController;
@@ -49,7 +48,7 @@ __decorate([
             }
             cb(null, true);
         },
-        limits: { fileSize: 5 * 1024 * 1024 },
+        limits: { fileSize: 20 * 1024 * 1024 },
     })),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.UploadedFile)()),

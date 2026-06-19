@@ -3,16 +3,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthBootstrap, ProtectedRoute, GuestRoute } from './components/AuthGuards';
 import { LoginPage, RegisterPage } from './pages/AuthPages';
 import { ProfilePage } from './pages/ProfilePage';
+import { MyProfilePage } from './pages/MyProfilePage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { FriendsPage } from './pages/FriendsPage';
+import { ChatPage } from './pages/ChatPage';
 
 const queryClient = new QueryClient();
-
-const ComingSoon = ({ name }: { name: string }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f10', color: '#a1a1aa', fontFamily: 'Inter, sans-serif', fontSize: 18 }}>
-    {name} — coming soon
-  </div>
-);
 
 export default function App() {
   return (
@@ -25,10 +21,11 @@ export default function App() {
               <Route path="/register" element={<RegisterPage />} />
             </Route>
             <Route element={<ProtectedRoute />}>
+              <Route path="/me" element={<MyProfilePage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/discover" element={<DiscoverPage />} />
               <Route path="/friends" element={<FriendsPage />} />
-              <Route path="/chat" element={<ComingSoon name="Chat" />} />
+              <Route path="/chat" element={<ChatPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>

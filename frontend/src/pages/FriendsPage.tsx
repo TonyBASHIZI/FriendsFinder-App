@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
 import { api } from '../api/client';
 import { avatarSrc } from '../utils/avatar';
-import { useAuthStore } from '../stores/auth.store';
+import { useSocketStore } from '../stores/socket.store';
 
 interface FriendRequest {
   id: string;
@@ -37,24 +36,14 @@ function Avatar({ url, name }: { url: string | null; name: string }) {
 
 export function FriendsPage() {
   const navigate = useNavigate();
-  const { token } = useAuthStore();
+  const { onlineUsers, socket } = useSocketStore();
   const [tab, setTab] = useState<'friends' | 'pending'>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pending, setPending] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
-  const socketRef = useRef<Socket | null>(null);
 
-  useEffect(() => {
-    // Connect socket to start conversations
-    const s = io('http://localhost:3000', {
-      auth: { token },
-      transports: ['websocket'],
-    });
-    socketRef.current = s;
-    fetchAll();
-    return () => { s.disconnect(); };
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   async function fetchAll() {
     setLoading(true);
@@ -83,7 +72,7 @@ export function FriendsPage() {
   }
 
   function startChat(friend: Friend) {
-    socketRef.current?.emit('start_conversation', { friendId: friend.id });
+    socket?.emit('start_conversation', { friendId: friend.id });
     setTimeout(() => navigate('/chat'), 300);
   }
 
@@ -94,18 +83,16 @@ export function FriendsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f10', fontFamily: 'Inter, sans-serif' }}>
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid #27272a', background: '#18181b' }}>
         <div style={{ fontSize: 18, fontWeight: 600, color: '#fafafa' }}>👥 Friends</div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => navigate('/discover')} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid #27272a', background: 'transparent', color: '#a1a1aa' }}>🌍 Discover</button>
           <button onClick={() => navigate('/chat')} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid #27272a', background: 'transparent', color: '#a1a1aa' }}>💬 Chat</button>
-          <button onClick={() => navigate('/profile')} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid #27272a', background: 'transparent', color: '#a1a1aa' }}>👤 Profile</button>
+          <button onClick={() => navigate('/me')} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid #27272a', background: 'transparent', color: '#a1a1aa' }}>👤 My Profile</button>
         </div>
       </div>
 
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '24px 16px' }}>
-        {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#18181b', borderRadius: 10, padding: 4, border: '1px solid #27272a' }}>
           {(['friends', 'pending'] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
@@ -122,7 +109,7 @@ export function FriendsPage() {
             <div style={{ textAlign: 'center', padding: 60 }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>👋</div>
               <div style={{ fontSize: 16, color: '#71717a', marginBottom: 8 }}>No friends yet</div>
-              <div style={{ fontSize: 14, color: '#52525b', marginBottom: 24 }}>Discover people near you and send requests!</div>
+              <div style={{ fontSize: 14, color: '#52525b', marginBottom: 24 }}>Discover people near you!</div>
               <button onClick={() => navigate('/discover')} style={{ padding: '10px 20px', borderRadius: 8, background: '#6366f1', border: 'none', color: 'white', fontSize: 14, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>
                 🌍 Go to Discover
               </button>
@@ -131,10 +118,15 @@ export function FriendsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {friends.map((f) => (
                 <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, background: '#18181b', borderRadius: 12, border: '1px solid #27272a' }}>
-                  <Avatar url={f.avatarUrl} name={f.displayName || f.username} />
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <Avatar url={f.avatarUrl} name={f.displayName || f.username} />
+                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: onlineUsers.has(f.id) ? '#22c55e' : '#52525b', border: '2px solid #18181b', transition: 'background 0.3s' }} />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 500, color: '#fafafa' }}>{f.displayName || f.username}</div>
-                    <div style={{ fontSize: 13, color: '#71717a', marginTop: 2 }}>@{f.username}</div>
+                    <div style={{ fontSize: 13, marginTop: 2, color: onlineUsers.has(f.id) ? '#22c55e' : '#71717a' }}>
+                      {onlineUsers.has(f.id) ? '● Online' : '@' + f.username}
+                    </div>
                     {f.bio && <div style={{ fontSize: 13, color: '#52525b', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.bio}</div>}
                   </div>
                   <button onClick={() => startChat(f)}
@@ -162,14 +154,8 @@ export function FriendsPage() {
                     {r.requester.bio && <div style={{ fontSize: 13, color: '#52525b', marginTop: 4 }}>{r.requester.bio}</div>}
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => respond(r.id, true)}
-                      style={{ padding: '8px 14px', borderRadius: 8, background: '#6366f1', border: 'none', color: 'white', fontSize: 13, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>
-                      ✓ Accept
-                    </button>
-                    <button onClick={() => respond(r.id, false)}
-                      style={{ padding: '8px 14px', borderRadius: 8, background: '#27272a', border: 'none', color: '#71717a', fontSize: 13, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>
-                      ✕
-                    </button>
+                    <button onClick={() => respond(r.id, true)} style={{ padding: '8px 14px', borderRadius: 8, background: '#6366f1', border: 'none', color: 'white', fontSize: 13, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>✓ Accept</button>
+                    <button onClick={() => respond(r.id, false)} style={{ padding: '8px 14px', borderRadius: 8, background: '#27272a', border: 'none', color: '#71717a', fontSize: 13, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>✕</button>
                   </div>
                 </div>
               ))}

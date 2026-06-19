@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth.store';
-import { authApi } from '../api/client';
+import { useSocketStore } from '../stores/socket.store';
+import { authApi, api } from '../api/client';
 
 export function AuthBootstrap({ children }: { children: React.ReactNode }) {
   const { token, setAuth, logout, setLoading } = useAuthStore();
+  const { connect, disconnect, setTotalUnread } = useSocketStore();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -14,12 +16,19 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
       return;
     }
     authApi.me()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         setAuth(data, token);
+        connect(token);
+        try {
+          const { data: convos } = await api.get('/chat/conversations');
+          const total = convos.reduce((sum: number, c: any) => sum + (Number(c.unreadCount) || 0), 0);
+          setTotalUnread(total);
+        } catch {}
         setReady(true);
       })
       .catch(() => {
         logout();
+        disconnect();
         setReady(true);
       });
   }, []);

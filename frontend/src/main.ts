@@ -5,7 +5,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
+  app.use(require('express').json({ limit: '20mb' }));
+  app.use(require('express').urlencoded({ limit: '20mb', extended: true }));
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,

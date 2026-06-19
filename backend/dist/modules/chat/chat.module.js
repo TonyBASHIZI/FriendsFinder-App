@@ -12,6 +12,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const chat_gateway_1 = require("./chat.gateway");
 const chat_service_1 = require("./chat.service");
 const chat_controller_1 = require("./chat.controller");
+const chat_upload_controller_1 = require("./chat-upload.controller");
 const message_entity_1 = require("../../entities/message.entity");
 const auth_module_1 = require("../auth/auth.module");
 let ChatModule = class ChatModule {
@@ -23,7 +24,7 @@ exports.ChatModule = ChatModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([message_entity_1.Conversation, message_entity_1.Message]),
             auth_module_1.AuthModule,
         ],
-        controllers: [chat_controller_1.ChatController],
+        controllers: [chat_controller_1.ChatController, chat_upload_controller_1.ChatUploadController],
         providers: [chat_gateway_1.ChatGateway, chat_service_1.ChatService],
     })
 ], ChatModule);

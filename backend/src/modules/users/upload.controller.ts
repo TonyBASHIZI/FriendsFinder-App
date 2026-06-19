@@ -28,12 +28,11 @@ export class UploadController {
       }
       cb(null, true);
     },
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
   }))
   async uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
     const avatarUrl = '/uploads/' + file.filename;
     await this.usersService.updateProfile(req.user.id, { avatarUrl });
-    return { avatarUrl };
   }
 }

@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
+import { ChatUploadController } from './chat-upload.controller';
 import { Conversation, Message } from '../../entities/message.entity';
 import { AuthModule } from '../auth/auth.module';
 
@@ -11,7 +12,7 @@ import { AuthModule } from '../auth/auth.module';
     TypeOrmModule.forFeature([Conversation, Message]),
     AuthModule,
   ],
-  controllers: [ChatController],
+  controllers: [ChatController, ChatUploadController],
   providers: [ChatGateway, ChatService],
 })
 export class ChatModule {}

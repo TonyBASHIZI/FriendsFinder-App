@@ -20,5 +20,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     startConversation(client: Socket, data: {
         friendId: string;
     }): Promise<void>;
-    isOnline(userId: string): boolean;
+    handleTyping(client: Socket, data: {
+        conversationId: string;
+    }): void;
 }
