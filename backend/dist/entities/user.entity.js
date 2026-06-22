@@ -27,6 +27,13 @@ let User = class User {
     displayName;
     avatarUrl;
     bio;
+    phoneNumber;
+    phoneVerified;
+    phoneVerificationCode;
+    phoneVerificationExpires;
+    emailVerified;
+    emailVerificationCode;
+    emailVerificationExpires;
     birthdate;
     gender;
     isActive;
@@ -63,6 +70,34 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "bio", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'phone_number', length: 20, nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "phoneNumber", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'phone_verified', default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "phoneVerified", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'phone_verification_code', length: 6, nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "phoneVerificationCode", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'phone_verification_expires', type: 'timestamp', nullable: true }),
+    __metadata("design:type", Date)
+], User.prototype, "phoneVerificationExpires", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'email_verified', default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "emailVerified", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'email_verification_code', length: 6, nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "emailVerificationCode", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'email_verification_expires', type: 'timestamp', nullable: true }),
+    __metadata("design:type", Date)
+], User.prototype, "emailVerificationExpires", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'date', nullable: true }),
     __metadata("design:type", String)

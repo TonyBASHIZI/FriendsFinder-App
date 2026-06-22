@@ -13,6 +13,8 @@ const platform_express_1 = require("@nestjs/platform-express");
 const users_controller_1 = require("./users.controller");
 const upload_controller_1 = require("./upload.controller");
 const users_service_1 = require("./users.service");
+const sms_service_1 = require("./sms.service");
+const email_service_1 = require("./email.service");
 const user_entity_1 = require("../../entities/user.entity");
 const user_location_entity_1 = require("../../entities/user-location.entity");
 let UsersModule = class UsersModule {
@@ -25,7 +27,7 @@ exports.UsersModule = UsersModule = __decorate([
             platform_express_1.MulterModule.register({ dest: './src/uploads' }),
         ],
         controllers: [users_controller_1.UsersController, upload_controller_1.UploadController],
-        providers: [users_service_1.UsersService],
+        providers: [users_service_1.UsersService, sms_service_1.SmsService, email_service_1.EmailService],
         exports: [users_service_1.UsersService],
     })
 ], UsersModule);

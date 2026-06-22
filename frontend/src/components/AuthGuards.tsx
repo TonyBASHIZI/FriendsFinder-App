@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth.store';
 import { useSocketStore } from '../stores/socket.store';
 import { authApi, api } from '../api/client';
@@ -48,7 +48,12 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
 
 export function ProtectedRoute() {
   const { user } = useAuthStore();
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
+  const location = useLocation();
+  if (!user) return <Navigate to="/login" replace />;
+  if (!(user as any).emailVerified && location.pathname !== '/verify-email') {
+    return <Navigate to="/verify-email" replace />;
+  }
+  return <Outlet />;
 }
 
 export function GuestRoute() {

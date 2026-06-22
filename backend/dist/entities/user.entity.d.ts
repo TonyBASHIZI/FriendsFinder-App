@@ -13,6 +13,13 @@ export declare class User {
     displayName: string;
     avatarUrl: string;
     bio: string;
+    phoneNumber: string;
+    phoneVerified: boolean;
+    phoneVerificationCode: string;
+    phoneVerificationExpires: Date;
+    emailVerified: boolean;
+    emailVerificationCode: string;
+    emailVerificationExpires: Date;
     birthdate: string;
     gender: Gender;
     isActive: boolean;

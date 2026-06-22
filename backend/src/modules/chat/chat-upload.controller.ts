@@ -16,12 +16,16 @@ export class ChatUploadController {
       destination: './src/uploads',
       filename: (req, file, cb) => {
         const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, 'chat-' + unique + extname(file.originalname));
+        const isAudio = file.mimetype.startsWith('audio/');
+        const prefix = isAudio ? 'voice-' : 'chat-';
+        cb(null, prefix + unique + extname(file.originalname));
       },
     }),
     fileFilter: (req, file, cb) => {
-      if (!file.mimetype.match(/image\/(jpg|jpeg|png|gif|webp)/)) {
-        return cb(new BadRequestException('Only image files allowed'), false);
+      const isImage = file.mimetype.match(/image\/(jpg|jpeg|png|gif|webp)/);
+      const isAudio = file.mimetype.match(/audio\/(webm|mpeg|mp3|wav|ogg|mp4)/);
+      if (!isImage && !isAudio) {
+        return cb(new BadRequestException('Only image or audio files allowed'), false);
       }
       cb(null, true);
     },

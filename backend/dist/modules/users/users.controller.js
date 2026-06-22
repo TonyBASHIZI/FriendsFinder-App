@@ -28,6 +28,18 @@ let UsersController = class UsersController {
     updateProfile(req, dto) {
         return this.usersService.updateProfile(req.user.id, dto);
     }
+    sendPhoneCode(req, body) {
+        return this.usersService.sendPhoneVerification(req.user.id, body.phoneNumber);
+    }
+    verifyPhone(req, body) {
+        return this.usersService.verifyPhoneCode(req.user.id, body.code);
+    }
+    sendEmailCode(req) {
+        return this.usersService.sendEmailVerification(req.user.id);
+    }
+    verifyEmail(req, body) {
+        return this.usersService.verifyEmailCode(req.user.id, body.code);
+    }
     updateLocation(req, dto) {
         return this.usersService.updateLocation(req.user.id, dto);
     }
@@ -48,6 +60,37 @@ __decorate([
     __metadata("design:paramtypes", [Object, users_dto_1.UpdateProfileDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateProfile", null);
+__decorate([
+    (0, common_1.Post)('me/phone/send-code'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "sendPhoneCode", null);
+__decorate([
+    (0, common_1.Post)('me/phone/verify'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "verifyPhone", null);
+__decorate([
+    (0, common_1.Post)('me/email/send-code'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "sendEmailCode", null);
+__decorate([
+    (0, common_1.Post)('me/email/verify'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "verifyEmail", null);
 __decorate([
     (0, common_1.Patch)('me/location'),
     __param(0, (0, common_1.Request)()),

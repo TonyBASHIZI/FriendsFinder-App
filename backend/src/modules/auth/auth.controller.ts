@@ -23,4 +23,18 @@ export class AuthController {
   getMe(@Request() req) {
     return this.authService.getMe(req.user.id);
   }
+
+  // POST /auth/verify-registration — protected, confirms email code
+  @Post('verify-registration')
+  @UseGuards(JwtAuthGuard)
+  verifyRegistration(@Request() req, @Body() body: { code: string }) {
+    return this.authService.verifyRegistrationCode(req.user.id, body.code);
+  }
+
+  // POST /auth/resend-code — protected, resends email code
+  @Post('resend-code')
+  @UseGuards(JwtAuthGuard)
+  resendCode(@Request() req) {
+    return this.authService.resendRegistrationCode(req.user.id);
+  }
 }

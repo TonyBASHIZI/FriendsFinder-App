@@ -21,7 +21,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     const existing = get().socket;
     if (existing?.connected) return;
 
-    const s = io('http://localhost:3000', {
+    const s = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
       auth: { token },
       transports: ['websocket'],
     });

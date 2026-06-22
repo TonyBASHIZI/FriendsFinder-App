@@ -7,6 +7,7 @@ import { MyProfilePage } from './pages/MyProfilePage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { FriendsPage } from './pages/FriendsPage';
 import { ChatPage } from './pages/ChatPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ export default function App() {
               <Route path="/register" element={<RegisterPage />} />
             </Route>
             <Route element={<ProtectedRoute />}>
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/me" element={<MyProfilePage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/discover" element={<DiscoverPage />} />

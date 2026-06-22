@@ -33,12 +33,16 @@ __decorate([
             destination: './src/uploads',
             filename: (req, file, cb) => {
                 const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                cb(null, 'chat-' + unique + (0, path_1.extname)(file.originalname));
+                const isAudio = file.mimetype.startsWith('audio/');
+                const prefix = isAudio ? 'voice-' : 'chat-';
+                cb(null, prefix + unique + (0, path_1.extname)(file.originalname));
             },
         }),
         fileFilter: (req, file, cb) => {
-            if (!file.mimetype.match(/image\/(jpg|jpeg|png|gif|webp)/)) {
-                return cb(new common_1.BadRequestException('Only image files allowed'), false);
+            const isImage = file.mimetype.match(/image\/(jpg|jpeg|png|gif|webp)/);
+            const isAudio = file.mimetype.match(/audio\/(webm|mpeg|mp3|wav|ogg|mp4)/);
+            if (!isImage && !isAudio) {
+                return cb(new common_1.BadRequestException('Only image or audio files allowed'), false);
             }
             cb(null, true);
         },

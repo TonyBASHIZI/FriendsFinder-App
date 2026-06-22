@@ -18,12 +18,18 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const user_entity_1 = require("../../entities/user.entity");
 const user_location_entity_1 = require("../../entities/user-location.entity");
+const sms_service_1 = require("./sms.service");
+const email_service_1 = require("./email.service");
 let UsersService = class UsersService {
     userRepo;
     locationRepo;
-    constructor(userRepo, locationRepo) {
+    smsService;
+    emailService;
+    constructor(userRepo, locationRepo, smsService, emailService) {
         this.userRepo = userRepo;
         this.locationRepo = locationRepo;
+        this.smsService = smsService;
+        this.emailService = emailService;
     }
     async updateProfile(userId, dto) {
         await this.userRepo.update(userId, dto);
@@ -32,6 +38,69 @@ let UsersService = class UsersService {
             throw new common_1.NotFoundException();
         const { passwordHash, ...safe } = user;
         return safe;
+    }
+    async sendPhoneVerification(userId, phoneNumber) {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 10 * 60 * 1000);
+        await this.userRepo.update(userId, {
+            phoneNumber,
+            phoneVerificationCode: code,
+            phoneVerificationExpires: expires,
+            phoneVerified: false,
+        });
+        const sent = await this.smsService.sendVerificationCode(phoneNumber, code);
+        if (!sent)
+            throw new common_1.BadRequestException('Failed to send SMS');
+        return { success: true, message: 'Verification code sent' };
+    }
+    async verifyPhoneCode(userId, code) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user)
+            throw new common_1.NotFoundException();
+        if (!user.phoneVerificationCode || user.phoneVerificationCode !== code) {
+            throw new common_1.BadRequestException('Invalid verification code');
+        }
+        if (user.phoneVerificationExpires && new Date() > user.phoneVerificationExpires) {
+            throw new common_1.BadRequestException('Verification code expired');
+        }
+        await this.userRepo.update(userId, {
+            phoneVerified: true,
+            phoneVerificationCode: undefined,
+            phoneVerificationExpires: undefined,
+        });
+        return { success: true, message: 'Phone verified!' };
+    }
+    async sendEmailVerification(userId) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user)
+            throw new common_1.NotFoundException();
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 10 * 60 * 1000);
+        await this.userRepo.update(userId, {
+            emailVerificationCode: code,
+            emailVerificationExpires: expires,
+        });
+        const sent = await this.emailService.sendVerificationCode(user.email, code);
+        if (!sent)
+            throw new common_1.BadRequestException('Failed to send email');
+        return { success: true, message: 'Verification code sent to your email' };
+    }
+    async verifyEmailCode(userId, code) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user)
+            throw new common_1.NotFoundException();
+        if (!user.emailVerificationCode || user.emailVerificationCode !== code) {
+            throw new common_1.BadRequestException('Invalid verification code');
+        }
+        if (user.emailVerificationExpires && new Date() > user.emailVerificationExpires) {
+            throw new common_1.BadRequestException('Verification code expired');
+        }
+        await this.userRepo.update(userId, {
+            emailVerified: true,
+            emailVerificationCode: undefined,
+            emailVerificationExpires: undefined,
+        });
+        return { success: true, message: 'Email verified!' };
     }
     async updateLocation(userId, dto) {
         const existing = await this.locationRepo.findOne({ where: { userId } });
@@ -62,6 +131,8 @@ exports.UsersService = UsersService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __param(1, (0, typeorm_1.InjectRepository)(user_location_entity_1.UserLocation)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        sms_service_1.SmsService,
+        email_service_1.EmailService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

@@ -52,12 +52,15 @@ const typeorm_2 = require("typeorm");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcrypt"));
 const user_entity_1 = require("../../entities/user.entity");
+const email_service_1 = require("../users/email.service");
 let AuthService = class AuthService {
     userRepo;
     jwtService;
-    constructor(userRepo, jwtService) {
+    emailService;
+    constructor(userRepo, jwtService, emailService) {
         this.userRepo = userRepo;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
     async register(dto) {
         const existing = await this.userRepo.findOne({
@@ -68,14 +71,52 @@ let AuthService = class AuthService {
             throw new common_1.ConflictException(`This ${field} is already taken`);
         }
         const passwordHash = await bcrypt.hash(dto.password, 12);
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 10 * 60 * 1000);
         const user = this.userRepo.create({
             email: dto.email,
             username: dto.username,
             passwordHash,
             displayName: dto.displayName || dto.username,
+            emailVerified: false,
+            emailVerificationCode: code,
+            emailVerificationExpires: expires,
         });
         await this.userRepo.save(user);
+        console.log('REGISTER: sending code', code, 'to', user.email);
+        const sent = await this.emailService.sendVerificationCode(user.email, code);
+        console.log('REGISTER: send result =', sent);
         return this.buildTokenResponse(user);
+    }
+    async verifyRegistrationCode(userId, code) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user)
+            throw new common_1.UnauthorizedException();
+        if (!user.emailVerificationCode || user.emailVerificationCode !== code) {
+            throw new common_1.BadRequestException('Invalid verification code');
+        }
+        if (user.emailVerificationExpires && new Date() > user.emailVerificationExpires) {
+            throw new common_1.BadRequestException('Verification code expired');
+        }
+        await this.userRepo.update(userId, {
+            emailVerified: true,
+            emailVerificationCode: undefined,
+            emailVerificationExpires: undefined,
+        });
+        return { success: true };
+    }
+    async resendRegistrationCode(userId) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user)
+            throw new common_1.UnauthorizedException();
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 10 * 60 * 1000);
+        await this.userRepo.update(userId, {
+            emailVerificationCode: code,
+            emailVerificationExpires: expires,
+        });
+        await this.emailService.sendVerificationCode(user.email, code);
+        return { success: true };
     }
     async login(dto) {
         const user = await this.userRepo.findOne({ where: { email: dto.email, isActive: true } });
@@ -96,6 +137,9 @@ let AuthService = class AuthService {
                 username: user.username,
                 displayName: user.displayName,
                 avatarUrl: user.avatarUrl,
+                emailVerified: user.emailVerified,
+                phoneVerified: user.phoneVerified,
+                phoneNumber: user.phoneNumber,
             },
         };
     }
@@ -112,6 +156,7 @@ exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        email_service_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

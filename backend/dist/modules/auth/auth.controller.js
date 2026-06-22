@@ -31,6 +31,12 @@ let AuthController = class AuthController {
     getMe(req) {
         return this.authService.getMe(req.user.id);
     }
+    verifyRegistration(req, body) {
+        return this.authService.verifyRegistrationCode(req.user.id, body.code);
+    }
+    resendCode(req) {
+        return this.authService.resendRegistrationCode(req.user.id);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -56,6 +62,23 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getMe", null);
+__decorate([
+    (0, common_1.Post)('verify-registration'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyRegistration", null);
+__decorate([
+    (0, common_1.Post)('resend-code'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resendCode", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

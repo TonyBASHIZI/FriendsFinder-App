@@ -34,6 +34,27 @@ export class User {
   @Column({ type: 'text', nullable: true })
   bio: string;
 
+  @Column({ name: 'phone_number', length: 20, nullable: true })
+  phoneNumber: string;
+
+  @Column({ name: 'phone_verified', default: false })
+  phoneVerified: boolean;
+
+  @Column({ name: 'phone_verification_code', length: 6, nullable: true })
+  phoneVerificationCode: string;
+
+  @Column({ name: 'phone_verification_expires', type: 'timestamp', nullable: true })
+  phoneVerificationExpires: Date;
+
+  @Column({ name: 'email_verified', default: false })
+  emailVerified: boolean;
+
+  @Column({ name: 'email_verification_code', length: 6, nullable: true })
+  emailVerificationCode: string;
+
+  @Column({ name: 'email_verification_expires', type: 'timestamp', nullable: true })
+  emailVerificationExpires: Date;
+
   @Column({ type: 'date', nullable: true })
   birthdate: string;
 

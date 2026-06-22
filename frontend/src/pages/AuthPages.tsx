@@ -126,11 +126,13 @@ export function RegisterPage() {
     setLoading(true);
     try {
       const { data } = await authApi.register({
-        email: form.email, username: form.username,
-        password: form.password, displayName: form.displayName || undefined,
+        email: form.email,
+        username: form.username,
+        password: form.password,
+        displayName: form.displayName || undefined,
       });
       setAuth(data.user, data.accessToken);
-      navigate('/discover');
+      navigate('/verify-email');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Something went wrong');
     } finally {

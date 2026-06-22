@@ -18,7 +18,9 @@ async function bootstrap() {
   }));
 
   app.enableCors({
-    origin: /^http:\/\/localhost:\d+$/,
+    origin: process.env.NODE_ENV === 'production'
+      ? process.env.FRONTEND_URL
+      : /^http:\/\/(localhost|192\.168\.\d+\.\d+):\d+$/,
     credentials: true,
   });
 
