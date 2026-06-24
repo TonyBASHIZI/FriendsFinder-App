@@ -15,6 +15,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private onlineUsers = new Map<string, string>(); // userId -> socketId
+  private activeCalls = new Map<string, { callerId: string; targetId: string; startTime: number; answered: boolean }>();
 
   constructor(
     private readonly chatService: ChatService,
@@ -76,7 +77,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.emit('conversation_started', convo);
   }
 
-  @SubscribeMessage('typing')
+ @SubscribeMessage('typing')
   handleTyping(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { conversationId: string },
@@ -86,4 +87,130 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       conversationId: data.conversationId,
     });
   }
+
+  // ── Voice call signaling ────────────────────────────────────────────────
+
+  @SubscribeMessage('call_user')
+  async handleCallUser(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { targetUserId: string; offer: any; callerName: string; callerAvatar: string | null },
+  ) {
+    const callerId = client.data.userId;
+    const targetSocketId = this.onlineUsers.get(data.targetUserId);
+
+    const callKey = callerId + '-' + data.targetUserId;
+    this.activeCalls.set(callKey, {
+      callerId,
+      targetId: data.targetUserId,
+      startTime: Date.now(),
+      answered: false,
+    });
+
+    if (targetSocketId) {
+      this.server.to(targetSocketId).emit('incoming_call', {
+        callerId,
+        callerName: data.callerName,
+        callerAvatar: data.callerAvatar,
+        offer: data.offer,
+      });
+    }
+
+    // Auto-mark as missed after 30 seconds if not answered
+    setTimeout(async () => {
+      const call = this.activeCalls.get(callKey);
+      if (call && !call.answered) {
+        this.activeCalls.delete(callKey);
+        const callerSocket = this.onlineUsers.get(callerId);
+        const targetSocket = this.onlineUsers.get(data.targetUserId);
+        if (callerSocket) this.server.to(callerSocket).emit('call_timeout');
+        if (targetSocket) this.server.to(targetSocket).emit('call_timeout');
+        await this.logMissedCall(callerId, data.targetUserId);
+      }
+    }, 30000);
+  }
+
+  private async logMissedCall(callerId: string, targetId: string) {
+    const convo = await this.chatService.getOrCreateConversation(callerId, targetId);
+    const message = await this.chatService.saveCallRecord(convo.id, callerId, 'missed');
+    const callerSocket = this.onlineUsers.get(callerId);
+    const targetSocket = this.onlineUsers.get(targetId);
+    if (callerSocket) this.server.to(callerSocket).emit('new_message', message);
+    if (targetSocket) this.server.to(targetSocket).emit('new_message', message);
+  }
+
+  @SubscribeMessage('answer_call')
+  handleAnswerCall(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { callerId: string; answer: any },
+  ) {
+    const calleeId = client.data.userId;
+    const callKey = data.callerId + '-' + calleeId;
+    const call = this.activeCalls.get(callKey);
+    if (call) call.answered = true;
+
+    const callerSocketId = this.onlineUsers.get(data.callerId);
+    if (callerSocketId) {
+      this.server.to(callerSocketId).emit('call_answered', { answer: data.answer });
+    }
+  }
+
+  @SubscribeMessage('ice_candidate')
+  handleIceCandidate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { targetUserId: string; candidate: any },
+  ) {
+    const targetSocketId = this.onlineUsers.get(data.targetUserId);
+    if (targetSocketId) {
+      this.server.to(targetSocketId).emit('ice_candidate', { candidate: data.candidate });
+    }
+  }
+
+@SubscribeMessage('end_call')
+  async handleEndCall(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { targetUserId: string; durationSeconds?: number },
+  ) {
+    const userId = client.data.userId;
+    const targetSocketId = this.onlineUsers.get(data.targetUserId);
+    if (targetSocketId) {
+      this.server.to(targetSocketId).emit('call_ended');
+    }
+
+    // Clear any pending active call entries between these two users
+    this.activeCalls.delete(userId + '-' + data.targetUserId);
+    this.activeCalls.delete(data.targetUserId + '-' + userId);
+
+    if (data.durationSeconds && data.durationSeconds > 0) {
+      const convo = await this.chatService.getOrCreateConversation(userId, data.targetUserId);
+      const message = await this.chatService.saveCallRecord(convo.id, userId, 'completed', data.durationSeconds);
+      if (targetSocketId) this.server.to(targetSocketId).emit('new_message', message);
+      client.emit('new_message', message);
+    }
+  }
+
+  @SubscribeMessage('decline_call')
+  async handleDeclineCall(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { callerId: string },
+  ) {
+    console.log('decline_call received from', client.data.userId, 'for caller', data.callerId);
+    const calleeId = client.data.userId;
+    const callerSocketId = this.onlineUsers.get(data.callerId);
+    console.log('Caller socket found:', callerSocketId);
+    if (callerSocketId) {
+      this.server.to(callerSocketId).emit('call_declined');
+      console.log('Emitted call_declined to caller');
+    } else {
+      console.log('CALLER SOCKET NOT FOUND!');
+    }
+
+    this.activeCalls.delete(data.callerId + '-' + calleeId);
+    try {
+      await this.logMissedCall(data.callerId, calleeId);
+      console.log('Missed call logged successfully');
+    } catch (err) {
+      console.error('ERROR logging missed call:', err);
+    }
+  } 
+
 }

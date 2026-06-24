@@ -7,6 +7,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     private readonly jwtService;
     server: Server;
     private onlineUsers;
+    private activeCalls;
     constructor(chatService: ChatService, jwtService: JwtService);
     handleConnection(client: Socket): Promise<void>;
     handleDisconnect(client: Socket): void;
@@ -23,4 +24,26 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     handleTyping(client: Socket, data: {
         conversationId: string;
     }): void;
+    handleCallUser(client: Socket, data: {
+        targetUserId: string;
+        offer: any;
+        callerName: string;
+        callerAvatar: string | null;
+    }): Promise<void>;
+    private logMissedCall;
+    handleAnswerCall(client: Socket, data: {
+        callerId: string;
+        answer: any;
+    }): void;
+    handleIceCandidate(client: Socket, data: {
+        targetUserId: string;
+        candidate: any;
+    }): void;
+    handleEndCall(client: Socket, data: {
+        targetUserId: string;
+        durationSeconds?: number;
+    }): Promise<void>;
+    handleDeclineCall(client: Socket, data: {
+        callerId: string;
+    }): Promise<void>;
 }

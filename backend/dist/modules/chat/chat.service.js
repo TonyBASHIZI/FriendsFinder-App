@@ -61,6 +61,15 @@ let ChatService = class ChatService {
         await this.convoRepo.update(conversationId, { lastMessageAt: new Date() });
         return message;
     }
+    async saveCallRecord(conversationId, callerId, type, durationSeconds) {
+        const content = type === 'missed'
+            ? '__CALL_MISSED__'
+            : '__CALL_COMPLETED__' + (durationSeconds || 0);
+        const message = this.messageRepo.create({ conversationId, senderId: callerId, content });
+        await this.messageRepo.save(message);
+        await this.convoRepo.update(conversationId, { lastMessageAt: new Date() });
+        return message;
+    }
 };
 exports.ChatService = ChatService;
 exports.ChatService = ChatService = __decorate([

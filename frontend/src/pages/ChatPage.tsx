@@ -104,12 +104,8 @@ export function ChatPage() {
   useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
 
   useEffect(() => {
-   const s = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
-      auth: { token },
-      transports: ['websocket'],
-    });
-
-    s.on('connect', () => console.log('Chat socket connected'));
+   const s = useSocketStore.getState().socket;
+   if (!s) return;
 
     s.on('new_message', (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
@@ -178,7 +174,12 @@ export function ChatPage() {
     });
 
     setSocket(s);
-    return () => { s.disconnect(); };
+    return () => {
+      s.off('new_message');
+      s.off('messages_history');
+      s.off('conversation_started');
+      s.off('friend_typing');
+    };
   }, [token]);
 
   useEffect(() => { fetchConversations(); }, []);
@@ -412,7 +413,7 @@ export function ChatPage() {
                   <Avatar url={activeConvo.avatarUrl} name={activeConvo.displayName || activeConvo.username} size={38} />
                   <div style={{ position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: '50%', background: onlineUsers.has(activeConvo.friendId) ? '#22c55e' : '#52525b', border: '2px solid #18181b', transition: 'background 0.3s' }} />
                 </div>
-                <div>
+                <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 600, color: '#fafafa' }}>{activeConvo.displayName || activeConvo.username}</div>
                   <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <div style={{ width: 7, height: 7, borderRadius: '50%', background: onlineUsers.has(activeConvo.friendId) ? '#22c55e' : '#52525b' }} />
@@ -421,6 +422,19 @@ export function ChatPage() {
                     </span>
                   </div>
                 </div>
+                <button
+                  onClick={() => (window as any).__startCall?.(activeConvo.friendId, activeConvo.displayName || activeConvo.username, activeConvo.avatarUrl)}
+                  disabled={!onlineUsers.has(activeConvo.friendId)}
+                  style={{
+                    width: 38, height: 38, borderRadius: 10,
+                    border: '1px solid #27272a',
+                    background: onlineUsers.has(activeConvo.friendId) ? '#22c55e' : 'transparent',
+                    color: onlineUsers.has(activeConvo.friendId) ? 'white' : '#52525b',
+                    fontSize: 16, cursor: onlineUsers.has(activeConvo.friendId) ? 'pointer' : 'default',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                  📞
+                </button>
               </div>
 
               {/* Messages */}

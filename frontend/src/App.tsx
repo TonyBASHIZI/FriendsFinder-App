@@ -8,6 +8,7 @@ import { DiscoverPage } from './pages/DiscoverPage';
 import { FriendsPage } from './pages/FriendsPage';
 import { ChatPage } from './pages/ChatPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
+import { CallManager } from './components/CallManager';
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthBootstrap>
+          <CallManager />
           <Routes>
             <Route element={<GuestRoute />}>
               <Route path="/login" element={<LoginPage />} />

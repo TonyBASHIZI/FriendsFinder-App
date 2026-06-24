@@ -8,4 +8,5 @@ export declare class ChatService {
     getConversations(userId: string): Promise<any>;
     getMessages(conversationId: string, userId: string): Promise<Message[]>;
     saveMessage(conversationId: string, senderId: string, content: string): Promise<Message>;
+    saveCallRecord(conversationId: string, callerId: string, type: 'missed' | 'completed', durationSeconds?: number): Promise<Message>;
 }
